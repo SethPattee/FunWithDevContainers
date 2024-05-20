@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  fun:
+    container_name: fun_editor
+    build:
+      context: .
+    privileged: true
+    volumes:
+      - ~/.dockercontainerHome:/home/developer
+      - ../:/app/:z
+      # - $HOME/.ssh:/home/developer/.ssh:z
+      # - $HOME/.gnupg:/home/developer/.gnupg:z
+      - ./.bashrc:/home/developer/.bashrc:z
+    environment:
+      - TZ=America/Denver
+      - PYTHONPATH=/app/api/
+    user: root
+    command: >
+      sh -c "
+        chown -R developer:developer /home/developer/
+        su - developer
+        tail -f /dev/null
+      "
+  client:
+    container_name: fun_client
+    user: developer
+    build:
+      context: .
+    volumes:
+      - ../:/app/:z
+    working_dir: /app
+
+    command: >
+      sh -c "
+        cd client/src
+        npm install
+        # npm start
+        cd src
+        npm run dev
+      "
+    ports:
+      - 8080:8080
+
+  api:
+    image: python:3.9
+    container_name: fun_editor_api
+    volumes:
+      - ../api:/app
+    working_dir: /app
+    command: >
+      sh -c "
+        python3 -m venv /app/venv && \
+        #source /app/venv/bin/activate && \
+        pip install -r requirements.txt && \
+        ls -a
+        flask run --host=0.0.0.0
+      "
+    depends_on:
+      - postgres_db
+    ports:
+      - 5001:5000
+
+  postgres_db:
+    image: postgres
+    container_name: fun_editor_postgres_db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ../schema.sql:/docker-entrypoint-initdb.d/schema.sql

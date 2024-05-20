@@ -1,0 +1,11 @@
+{
+  "name": "Docker from Docker Compose",
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "fun",
+  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/app/",
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+  },
+  "remoteUser": "developer"
+}
